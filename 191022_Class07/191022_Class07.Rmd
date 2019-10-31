@@ -2,7 +2,7 @@
 title: "Class_7_R_Functions_and_Packages"
 author: "Mark Allan Co Jacob"
 date: "10/22/2019"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -156,15 +156,15 @@ grade(x)
 
 
 ```{r}
-install.packages("BiocManager")
+# install.packages("BiocManager")
 library(BiocManager)
 ```
 
 ```{r}
-install.packages("Rcade")
+# install.packages("Rcade")
 library(Rcade)
 
-install.packages("datapasta")
+# install.packages("datapasta")
 library(datapasta)
 ```
 
@@ -176,7 +176,7 @@ BiocManager::install("Rcade")
 ```
 
 ```{r}
-devtools::install_github('RLesur/Rcade')
+# devtools::install_github('RLesur/Rcade')
 ```
 
 
