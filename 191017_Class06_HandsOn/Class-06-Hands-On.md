@@ -1,31 +1,38 @@
----
-title: "Class 06 Lab"
-author: "Mark Allan Co Jacob"
-date: "10/17/2019"
-output: github_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+Class 06 Lab
+================
+Mark Allan Co Jacob
+10/17/2019
 
 ## Installing the **bio3d** package for sequence and structure analysis
 
-```{r}
+``` r
 # install.packages("bio3d")
 ```
 
-
-
-```{r}
+``` r
 library(bio3d)
 
 # The variables within this set are the codes we need to make a function out of (i.e. 4AKE, 1AKE, and 1E4Y)
 
 s1 <- read.pdb("4AKE") # kinase with drug
-s2 <- read.pdb("1AKE") # kinase no drug
-s3 <- read.pdb("1E4Y") # kinase with drug
+```
 
+    ##   Note: Accessing on-line PDB file
+
+``` r
+s2 <- read.pdb("1AKE") # kinase no drug
+```
+
+    ##   Note: Accessing on-line PDB file
+    ##    PDB has ALT records, taking A only, rm.alt=TRUE
+
+``` r
+s3 <- read.pdb("1E4Y") # kinase with drug
+```
+
+    ##   Note: Accessing on-line PDB file
+
+``` r
 # It seems as though the trim.pdb command is constant as well as its parameters. s3 seems to have a copy and paste inconsistency as it references s1. We could reduce this down to a single command.
 
 s1.chainA <- trim.pdb(s1, chain="A", elety="CA")
@@ -41,16 +48,25 @@ s3.b <- s3.chainA$atom$b
 # We could turn these plots into a plotb3() command if answers become available.
 
 plotb3(s1.b, sse=s1.chainA, typ="l", ylab="Bfactor")
-plotb3(s2.b, sse=s2.chainA, typ="l", ylab="Bfactor")
-plotb3(s3.b, sse=s3.chainA, typ="l", ylab="Bfactor")
-
 ```
+
+![](Class-06-Hands-On_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+``` r
+plotb3(s2.b, sse=s2.chainA, typ="l", ylab="Bfactor")
+```
+
+![](Class-06-Hands-On_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
+
+``` r
+plotb3(s3.b, sse=s3.chainA, typ="l", ylab="Bfactor")
+```
+
+![](Class-06-Hands-On_files/figure-gfm/unnamed-chunk-2-3.png)<!-- -->
 
 ### This is the thought process of a condensed chunk of code.
 
-
-```{r}
-
+``` r
 # I can assign each pdb code a variable, but I can instead just rely on using character strings within my custom function to create these graphs.
 
 
@@ -72,7 +88,38 @@ WhackPDB <- function(x){
 
 # This is the result of inputting the specific PDB codes given. This works for any PDB code found within the library of bio3d.
 WhackPDB("4AKE")
+```
+
+    ##   Note: Accessing on-line PDB file
+
+    ## Warning in get.pdb(file, path = tempdir(), verbose = FALSE): C:
+    ## \Users\oahu_\AppData\Local\Temp\RtmpAz0iTG/4AKE.pdb exists. Skipping
+    ## download
+
+![](Class-06-Hands-On_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+``` r
 WhackPDB("1AKE")
+```
+
+    ##   Note: Accessing on-line PDB file
+
+    ## Warning in get.pdb(file, path = tempdir(), verbose = FALSE): C:
+    ## \Users\oahu_\AppData\Local\Temp\RtmpAz0iTG/1AKE.pdb exists. Skipping
+    ## download
+
+    ##    PDB has ALT records, taking A only, rm.alt=TRUE
+
+![](Class-06-Hands-On_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+
+``` r
 WhackPDB("1E4Y")
 ```
 
+    ##   Note: Accessing on-line PDB file
+
+    ## Warning in get.pdb(file, path = tempdir(), verbose = FALSE): C:
+    ## \Users\oahu_\AppData\Local\Temp\RtmpAz0iTG/1E4Y.pdb exists. Skipping
+    ## download
+
+![](Class-06-Hands-On_files/figure-gfm/unnamed-chunk-3-3.png)<!-- -->
