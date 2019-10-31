@@ -1,3 +1,12 @@
+#' ---
+#' title: "Class 05: Data exploration and visualization in R"
+#' author: "Mark Jacob"
+#' date: "October 31st, 2019"
+#' output: github_document
+#' ---
+
+
+
 #Class5 Data Visualization
 x <- rnorm(1000)
 #Looking for help
