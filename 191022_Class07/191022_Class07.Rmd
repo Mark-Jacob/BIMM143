@@ -1,0 +1,189 @@
+---
+title: "Class_7_R_Functions_and_Packages"
+author: "Mark Allan Co Jacob"
+date: "10/22/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R functions revisited
+
+
+To take functions and environments from URLs, one can use the source() function. Once the line has been processed, the global environment is populated with the stored data and functions.
+```{r}
+source("http://tinyurl.com/rescale-R")
+```
+
+After sourcing, we can recall functions:
+```{r}
+rescale(c(1,10,5,NA,6))
+```
+
+Testing the is.numeric() function and the not symbol (!)
+```{r}
+
+is.numeric(c(1,5,NA,6))
+```
+```{r}
+is.numeric(c(1,5,NA,6,"Barry"))
+```
+```{r}
+!is.numeric(c(1,5,NA,6,"Barry"))
+```
+```{r}
+!is.numeric(c(1,5,NA,6))
+```
+
+
+## Creating a custom function:
+Write a function to find where there are NA elements in two input vectors
+
+First make some simple input where I know the answer. The function **is.na()** was found online. 
+```{r}
+x <- c(1,2,NA,3,NA)
+y <- c(NA,3,NA,3,4)
+
+# is.na specifies whether each object is NA or not through the output of TRUE or FALSE
+is.na(x)
+is.na(y)
+
+
+# which() specifies what positions the argument is located
+which(is.na(x))
+which(is.na(y))
+```
+
+Let's be weird, we want to specify where the positions of NA are the same in either x or y
+```{r}
+is.na(x) & is.na(y)
+
+# sum() function totals the number of TRUEs I have in my input.
+sum(is.na(x) & is.na(y))
+
+#Evidence that TRUE equals 1
+sum(c(TRUE, TRUE, FALSE, TRUE))
+```
+
+Now let's take our snippets into a function:
+```{r}
+both_na <- function(x,y) {
+  sum(is.na(x) & is.na(y))
+}
+```
+
+```{r}
+both_na(x,y)
+```
+
+## **eejit** proofing
+
+Testing other conditions to 
+```{r}
+x <- c(NA, NA, NA)
+y1 <- c( 1, NA, NA)
+y2 <- c( 1, NA, NA, NA)
+
+both_na(x,y1)
+both_na(x,y2)
+
+x2 <- c(NA,NA)
+
+#If entities are not of the same length, the both_na function recycles the shorter length to compensate
+
+x <-  c(NA,NA,NA)
+y3 <- c(1, NA, NA, NA, NA, NA, NA)
+both_na(x,y3)
+```
+
+
+Using length() to solve the recycling issue of the eejit proofing
+
+```{r}
+
+both_na2 <- function (x,y) {
+  if(length(x) != length(y)) {
+     stop("Your x and y entities are not of the same length")
+  } else sum(is.na(x) & is.na(y))
+
+}
+
+
+```
+
+Writing a function that determines overall grade from each student
+```{r}
+x <- c(100,90,70, NA)
+y <- c(90,80,70)
+
+
+grade <- function(x) {
+  if( any(is.na(x))) {
+    warning("Student is missing a homework.")
+  }
+  mean(x[-which.min(x)], na.rm = TRUE)
+}
+
+grade(x)
+```
+
+```{r}
+
+url <- "https://tinyurl.com/gradeinput"
+
+Students <- read.csv(url, row.names = 1)
+
+apply(Students, 1, grade)
+
+```
+
+```{r}
+x <- c(100,90,70, NA)
+y <- c(90,80,70)
+
+
+grade <- function(x) {
+  if( any(is.na(x))) {
+    warning("Student is missing a homework.")
+  }
+  sum(x[-which.min(x)], na.rm = TRUE)/ length(x)
+}
+
+grade(x)
+```
+
+
+```{r}
+install.packages("BiocManager")
+library(BiocManager)
+```
+
+```{r}
+install.packages("Rcade")
+library(Rcade)
+
+install.packages("datapasta")
+library(datapasta)
+```
+
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("Rcade")
+```
+
+```{r}
+devtools::install_github('RLesur/Rcade')
+```
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,145 @@
+---
+title: "191024_Class08"
+author: "Mark Allan Co Jacob"
+date: "10/24/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# **Intro to Machine Learning**
+
+We will be conducting unsupervised machine learning. 
+We first need to understand what k-mean clustering means.
+If we define k as a numerical value, we are specifying how many 'clusters' we are looking for. 
+We want to calculate the mean values in the clusters of observation. 
+We also want to consider the variance of these clusters. The variance can be considered as an indicator of clustering quality.
+The smaller the variance, the better the clustering quality. 
+If we want to stay in one-dimension data, we can just use means.
+In a two-dimension data set, we need to use the euclidian equation.
+
+In R, we will be utilizing the command : kmeans( x = , centers = 3 , nstart = 20)
+x is the provided data you want to observe.
+centers are the amount of clusters you desire.
+nstart is the amount of iterations of cycles you want R to parse through your data. 
+It is important to note that k-means is random. It can start its iterations at random points.
+The smallest sum-square is the best answer. However, it is up to us to define the best number of clusters to expect.
+
+To determine the number of clusters, we should NOT look to trial and error. We can use a scree plot. With a scree plot, we can find the quickest gain without sacrificing too much time.
+
+## Working through a k-means process
+
+```{r}
+tmp <- c(rnorm(30,-3), rnorm(30,3))
+# rnorm takes 30 points and centers them around x = -3, same goes for the second element of tmp.
+x <- cbind(x=tmp, y=rev(tmp))
+plot(x)
+
+# Actually using the k-means command
+
+k <- kmeans(x, centers =2, nstart = 20)
+
+```
+
+Looking into the output of kmeans
+
+There are 30 points within the clusters. 
+
+```{r}
+k
+# k$size indicates the points in each cluster
+k$size
+
+# k$cluster indicates the points assigned to the allotted clusters. The clustering vector output if the output of kmeans is printed.
+k$cluster
+
+# k$center indicates the coordinates of the center of the clusters.
+k$centers
+```
+
+Let's see if we can plot these clusters with differentiating colors.
+```{r}
+# Using k$cluster as a color specification. The points assigned to 1 will be assigned as black and 2 will be red.
+
+plot(x, col=k$cluster)
+
+# To add center points, recall k$centers
+points(k$centers, col="blue", pch= 15)
+```
+
+As good a function kmeans is, it has its limitations:
+1. Constantly have to specify parameters
+2. Depends on iterations for quality
+
+## **Hierarchical Clustering**
+We can use other clustering algorithms in which it defines everything as a cluster and works its way up in clustering until it ends up with one.
+
+Working through the hierarchical clustering process:
+hclust()
+Note: You must specify distance matrix as input. wWe can specify fwith the dist() function.
+```{r}
+# First we need to calculate point (dis)similarity
+# as the Euclidean distance between observations
+dist_matrix <- dist(x)
+# The hclust() function returns a hierarchical
+# clustering model
+hc <- hclust(d = dist_matrix)
+# the print method is not so useful here
+hc 
+
+plot(hc)
+
+#Interestingly enough, we can see the data point entries labelled in the 'leaves' of this data tree.
+
+# We can specify height (the limit to the clustering) by cutting it and the distance between clusters.
+plot(hc)
+abline(h=6, col= "red")
+grp <- cutree(hc, h=6)
+# cutree() gives us the membership factor after a certain height cutoff.
+
+#Different types of hierarchical clustering : complete, single, center
+```
+
+```{r}
+# Step 1. Generate some example data for clustering
+x <- rbind(
+ matrix(rnorm(100, mean=0, sd = 0.3), ncol = 2), # c1
+ matrix(rnorm(100, mean = 1, sd = 0.3), ncol = 2), # c2
+ matrix(c(rnorm(50, mean = 1, sd = 0.3), # c3
+ rnorm(50, mean = 0, sd = 0.3)), ncol = 2))
+colnames(x) <- c("x", "y")
+# Step 2. Plot the data without clustering
+plot(x)
+# Step 3. Generate colors for known clusters
+# (just so we can compare to hclust results)
+col <- as.factor( rep(c("c1","c2","c3"), each=50) )
+plot(x, col=col)
+
+#How to draw a tree with specifications on where to draw the line for clusters.
+dist(x)
+hc2 <- hclust(dist(x))
+plot(hc2)
+abline(h=2, col="red")
+grp <- cutree(hc2, k=3)
+
+```
+
+```{r}
+plot(x, col=grp)
+```
+How many points in each cluster through printing of a table:
+```{r}
+table(grp)
+```
+
+Cross tablulate i.e. compare the clustering result with known answer. It depicts the known data and see where those data points ended up in terms of which cluster. 
+
+```{r}
+table(grp, col)
+```
+
+PCA captures the importance for each point. The more variance a PCA set captures, the better. It also indicates importance.
