@@ -1,0 +1,70 @@
+---
+title: "Class 11: Structural Bioinformatics 1"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The PDB database for biomolecular  structure data
+
+>Determine the percentage of PDB structures solved by X-Ray and Electron Microscopy.
+
+```{r}
+data <- read.csv("Data_Export_Summary.csv")
+data
+
+PrcntXrayElectron <- sum(data$Total)
+PrcntXrayElectron
+
+
+
+
+```
+```{r}
+# Proportion of Entries from each method
+(data$Total/sum(data$Total)) * 100
+```
+
+```{r}
+# Determine percent of Protein 
+round((sum(data$Proteins))/ sum(data$Total)* 100 , 2)
+```
+ Her we will read the 1HSG PDB structure and select the protein component and write out a new fuileand do the same for ligand (i.e known drug). 
+```{r}
+library(bio3d)
+
+pdb <- read.pdb("1hsg.pdb")
+pdb
+
+#read.pdb()
+#atom.select()
+#write.pdb()
+#tru
+```
+```{r}
+protein <- atom.select(pdb, "protein", value= TRUE)
+ligand <- atom.select(pdb, "ligand", value = TRUE)
+
+write.pdb(ligand, file = "1hsg_ligand.pdb")
+write.pdb(protein, file = "1hsg_protein.pdb")
+```
+
+
+```{r}
+# Select chain A
+a.inds <- atom.select(pdb, chain="A")
+# Select C-alphas of chain A
+ca.inds <- atom.select(pdb, "calpha", chain="A")
+# We can combine multiple selection criteria to return their intersections
+cab.inds <- atom.select(pdb, elety=c("CA","CB"), chain="A",
+resno=10:20)
+```
+
+Rstudio themes package
+
+
+
+
+
