@@ -1,0 +1,176 @@
+---
+title: "Class 14"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Glucocorticoid Steroids
+
+Downloaded BiocManager and DESeq2
+```{r eval=FALSE}
+install.packages("BiocManager")
+BiocManager::install()
+
+# For this class, you'll also need DESeq2:
+BiocManager::install("DESeq2")
+```
+
+
+Importing the Airway counts and metadata
+```{r}
+counts <- read.csv("airway_scaledcounts.csv", stringsAsFactors = FALSE)
+metadata <-  read.csv("airway_metadata.csv", stringsAsFactors = FALSE)
+```
+
+Viewing the data and defining how many genes there are.
+```{r}
+nrow(counts)
+nrow(metadata)
+# There are 38,694 genes in each experiment
+# There are 8 experiments total, alternating between control and treament.
+```
+
+Now we're attempting to calculate the means of gene expression across the control experiments. Once we calculate the means and eventual standard deviation, we can compare them against the calculations of the treated.
+
+We want to know if there is a difference in expression values for control (non-drug) vs treated (i.e. drug added cell lines).
+
+First step is to find which experiments were the actual experiments and then get the average values across all control experiments. then we will do the same for drug treated.
+
+Calculations for control
+```{r}
+control <- metadata[metadata[,"dex"]=="control",]
+control.mean <- rowSums( counts[ ,control$id] )/length(control$id) 
+names(control.mean) <- counts$ensgene
+```
+
+Calculations for treated
+```{r}
+treated <- metadata[metadata[,"dex"]=="treated",]
+treated.mean <- rowSums( counts[ ,treated$id] )/length(treated$id) 
+names(treated.mean) <- counts$ensgene
+```
+
+Combining meancount data for bookkeping purposes
+```{r}
+meancounts <- data.frame(control.mean, treated.mean)
+```
+
+Plot control vs treated
+```{r}
+plot((meancounts$control.mean),(meancounts$treated.mean))
+
+#Log adjusted in two commands
+plot(log(meancounts$control.mean), log(meancounts$treated.mean), xlab = "Control", ylab = "Treated", col= "blue")
+```
+
+Now we calculate the fold change of the log2 function and store it in countsmean.
+```{r}
+meancounts$log2fc <- log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+
+# The log2fc represents the log2 fold change between control.mean and treated.mean. If we observe a positive value, we should expect to see a higher value in treated.mean. If we observe a negative value, we should expect to see a higher value in treated.control. If we observe a NaN, or 0, we expect no change. Infinity change is case by case as it is the program trying to take the log of zero.
+```
+
+Now we want to find these values that are giving us errors and eventually filter them out of our data set.
+```{r}
+# This command seeks out the values that are giving us values of zero in either group (control/treated). These are the values that give us error codes.
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+
+# These zero values are then processed through the unique command to find these for these zero genes then stored.
+to.rm <- unique(zero.vals[,1])
+
+# We take those unique values and we then delete them against the data frame to filter out the zeros.
+mycounts <- meancounts[-to.rm,]
+head(mycounts)
+```
+
+```{r}
+Joe <- data.frame (Mama=c(12312,45346,0,231231,3414), Papa=c(12312,0,0,0,234234))
+which(Joe ==0,arr.ind=TRUE)
+```
+
+
+```{r}
+up.ind <- mycounts$log2fc > 2
+down.ind <- mycounts$log2fc < (-2)
+sum(up.ind)
+sum(down.ind)
+```
+
+Fold changes are important to use. It helps put into perspective what gene expression changes are occuring.
+
+DESeq2 Analysis
+
+```{r}
+library(DESeq2)
+citation("DESeq2")
+```
+
+Building a DESeqDataSet Object
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex, 
+                              tidy=TRUE)
+dds
+```
+
+```{r}
+dds <- DESeq(dds)
+```
+```{r}
+res <- results(dds)
+res
+summary(res)
+```
+
+Making a Volcano plot for this data set.
+
+```{r}
+res$sig <- res$padj<0.05 & abs(res$log2FoldChange)>2
+
+# How many of each?
+table(res$sig)
+
+sum(is.na(res$sig))
+
+palette( c("gray","blue") )
+
+plot( res$log2FoldChange,  -log(res$padj), 
+ col=res$sig+1, ylab="-Log(P-value)", xlab="Log2(FoldChange)")
+
+# Add some cut-off lines
+abline(v=c(-2,2), col="darkgray", lty=2)
+abline(h=-log(0.1), col="darkgray", lty=2)
+```
+
+```{r}
+palette("default")  
+# Setup our custom point color vector 
+mycols <- rep("gray", nrow(res))
+mycols[ abs(res$log2FoldChange) > 2 ]  <- "red" 
+
+#These parameters put into place which ones are statistically significant and have a high fold change.
+inds <- (res$padj < 0.01) & (abs(res$log2FoldChange) > 2 )
+mycols[ inds ] <- "blue"
+
+#Volcano plot with custom colors 
+plot( res$log2FoldChange,  -log(res$padj), 
+ col=mycols, ylab="-Log(P-value)", xlab="Log2(FoldChange)" )
+
+
+#Self-instated lines to indicate threshold limits we've placed
+abline(v=c(-2,2), col="gray", lty=2)
+abline(h=-log(0.1), col="gray", lty=2)
+```
+
+
+Saving significant results
+
+```{r}
+write.csv(res, file="expression_results.csv")
+```
+
