@@ -1,0 +1,93 @@
+---
+title: "191119_Class17"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Hands-on Part 2
+
+```{r}
+library(RCy3)
+library(igraph)
+library(RColorBrewer)
+```
+
+## First Contact
+
+```{r}
+library(RCy3)
+
+# Test the connection to Cytoscape.
+cytoscapePing()
+
+# Check the version
+cytoscapeVersionInfo()
+```
+
+```{r}
+g <- makeSimpleIgraph()
+createNetworkFromIgraph(g,"myGraph")
+fig <- exportImage(filename="demo", type="png", height=350)
+knitr::include_graphics("./demo.png")
+```
+
+```{r}
+plot(g)
+```
+
+```{r}
+setVisualStyle("Marquee")
+fig <- exportImage(filename="demo_marquee", type="png", height=350)
+
+knitr::include_graphics("./demo_marquee.png")
+```
+
+Different types of Cytoscape styles
+
+```{r}
+styles <- getVisualStyleNames()
+styles
+```
+
+Reading Metagenomics Data
+
+```{r}
+## scripts for processing located in "inst/data-raw/"
+prok_vir_cor <- read.delim("virus_prok_cor_abundant.tsv", stringsAsFactors = FALSE)
+
+## Have a peak at the first 6 rows
+head(prok_vir_cor)
+```
+
+```{r}
+g <- graph.data.frame(prok_vir_cor, directed = FALSE)
+class(g)
+g
+```
+
+```{r}
+plot(g)
+plot(g, vertex.label=NA)
+plot(g, vertex.size=3, vertex.label=NA)
+```
+
+```{r}
+library(ggraph)
+ggraph(g, layout = 'auto') +
+  geom_edge_link(alpha = 0.25) +
+  geom_node_point(color="steelblue") +
+  theme_graph()
+createNetworkFromIgraph(g,"myIgraph")
+```
+
+```{r}
+cb <- cluster_edge_betweenness(g)
+cb
+plot(cb, y=g, vertex.label=NA,  vertex.size=3)
+head( membership(cb) )
+```
+
+

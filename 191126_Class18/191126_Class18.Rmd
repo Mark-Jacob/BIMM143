@@ -1,0 +1,151 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Class 18: The NCI Genomics Data and Analysis
+
+```{r}
+library(GenomicDataCommons)
+library(TCGAbiolinks)
+library(maftools)
+```
+
+```{r}
+# Status indicates the ability to talk to the Genomics Database
+status()
+```
+
+```{r}
+# Querying the GDC from R
+
+projects <- getGDCprojects()
+head(projects)
+
+```
+
+```{r}
+cases_by_project <- cases() %>%
+  facet("project.project_id") %>%
+  aggregations()
+head(cases_by_project)
+
+
+```
+
+```{r}
+x <- cases_by_project$project.project_id
+
+# Make a custom color vector for our plot in light blue and distinguish the TCGA-PAAD in red.
+colvec <- rep("lightblue", nrow(x))
+colvec[x$key == "TCGA-PAAD"] <- "red"
+colvec
+# Plot with 'log' for y axis and rotate labels with 'las'
+#par(___)  
+par(mar=c(12,4.1,4.1,2.1))
+barplot(x$doc_count, names.arg=x$key, log="y", col=colvec, las=2)
+
+    
+```
+
+# Part 2
+
+```{r}
+seqs <- read.fasta("lecture18_sequences.fa")
+seqs
+
+```
+```{r}
+seqs <- seqaln(seqs)
+## Calculate positional identity scores
+ide <- conserv(seqs$ali, method="identity")
+mutant.sites <- which(ide < 1) 
+
+## Exclude gap possitions from analysis
+gaps <- gap.inspect(seqs)
+mutant.sites <- mutant.sites[mutant.sites %in% gaps$f.inds]
+
+mutant.sites
+## Make a "names" label for our output sequences (one per mutant)
+mutant.names <- paste0(seqs$ali["P53_wt",mutant.sites],
+                       mutant.sites,
+                       seqs$ali["P53_mutant",mutant.sites])
+
+mutant.names
+## Sequence positions surounding each mutant site
+start.position <- mutant.sites - 8
+end.position <-  mutant.sites + 8
+
+# Blank matrix to store sub-sequences
+store.seqs <- matrix("-", nrow=length(mutant.sites), ncol=17)
+rownames(store.seqs) <- mutant.names
+
+## Extract each sub-sequence
+for(i in 1:length(mutant.sites)) {
+  store.seqs[i,] <- seqs$ali["P53_mutant",start.position[i]:end.position[i]]
+}
+
+store.seqs
+```
+
+```{r}
+ide <- conserv(seqs$ali, method="identity")
+pos <- which (ide < 1)[1]
+pos
+pos-8
+pos+8
+```
+
+
+```{r}
+library(bio3d)
+heatmapdata <- read.fasta("TEST FASTA PHYLOGENY2.fa")
+
+
+hmd <- seqidentity(heatmapdata)
+
+heatmatmatrix <- data.matrix(hmd)
+
+
+heatmap_image <- heatmap(heatmatmatrix,cexRow = 1,cexCol = 1, margins = c(8,5))
+
+```
+
+
+```{r}
+jpeg
+heatmap_image <- heatmap(heatmatmatrix,cexRow = 1,cexCol = 1, margins = c(8,5))
+dev.off()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,196 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **Class 15**
+
+## Differential Equation Analysis
+```{r}
+# Loading the packages
+library(DESeq2)
+```
+ 
+```{r}
+# Loading all the downloaded files to RStudio
+metaFile <- "GSE37704_metadata.csv"
+countFile <- "GSE37704_featurecounts.csv"
+
+# Import metadata and take a peak
+colData = read.csv(metaFile, row.names=1)
+head(colData)
+
+# What we see is a portion of the genes and their conditions.
+
+#The following are genes as rows and their lengths. Following columns are hte sames and their expression via RNAseq.
+countData = read.csv(countFile, row.names=1)
+head(countData)
+```
+
+```{r}
+# To be concise and to eliminate the chance of any mistakes, we want to get rid of the length file.
+
+countData <- as.matrix(countData[,-1])
+head(countData)
+```
+
+```{r}
+# To double-check the sample IDs match the id values 
+all(colnames(countData) == rownames(colData))
+```
+ 
+```{r}
+# Now we want to filter our the genes that have 0s across all samples for conciseness.
+#This command sums each row's values and checks whether or not it is a 0. If it is a non-zero, the row is kept and restored in the countData vector.
+countData = countData[rowSums(countData)!=0, ]
+head(countData)
+```
+ 
+
+ 
+## DESeq2 Analysis
+
+```{r}
+# This sets up the object with our data in the way DESeq is able to interpret and utilize.
+dds = DESeqDataSetFromMatrix(countData=countData,
+                             colData=colData,
+                             design=~condition)
+dds = DESeq(dds)
+```
+
+```{r}
+res = results (dds)
+res
+summary(res)
+```
+ 
+```{r}
+# Making a volcano plot with this new dds
+plot( res$log2FoldChange, -log(res$padj) )
+```
+ 
+```{r}
+# Making this plot more distinguishable
+
+# Colors to 
+mycols <- rep("gray", nrow(res) )
+
+# Color red the genes with absolute fold change above 2
+mycols[ abs(res$log2FoldChange) > 2 ] <- "red"
+
+# Color blue those with adjusted p-value less than 0.01 and absolute fold change more than 2
+inds <- (res$padj < 0.01) & (abs(res$log2FoldChange) > 2 )
+mycols[ inds ] <- "blue"
+
+plot( res$log2FoldChange, -log(res$padj), col=mycols, xlab="Log2(FoldChange)", ylab="-Log(P-value)" )
+```
+ 
+```{r eval=FALSE}
+# Now we add gene annotations to the genes we want.
+BiocManager::install("AnnotationDbi")
+BiocManager::install("org.Hs.eg.db")
+library("org.Hs.eg.db")
+library("AnnotationDbi")
+# We can translate between all the following database ID systems
+columns(org.Hs.eg.db)
+```
+ 
+```{r}
+columns(org.Hs.eg.db)
+
+res$symbol = mapIds(org.Hs.eg.db,
+                    keys=row.names(countData), #where are my IDs
+                    keytype="ENSEMBL", # what format are my IDs
+                    column="SYMBOL", #the new format I wantxg
+                    multiVals="first")
+
+res$entrez = mapIds(org.Hs.eg.db,
+                    keys=row.names(countData),
+                    keytype="ENSEMBL",
+                    column="ENTREZID",
+                    multiVals="first")
+
+res$name =   mapIds(org.Hs.eg.db,
+                    keys=row.names(res),
+                    keytype= "ENSEMBL",
+                    column="GENENAME",
+                    multiVals="first")
+
+head(res, 10)
+```
+ 
+## Pathway Analysis
+ 
+```{r}
+library(pathview)
+library(gage)
+library(gageData)
+```
+ 
+```{r}
+data(kegg.sets.hs)
+data(sigmet.idx.hs)
+
+# Focus on signaling and metabolic pathways only
+kegg.sets.hs = kegg.sets.hs[sigmet.idx.hs]
+
+# Examine the first 3 pathways
+head(kegg.sets.hs, 3)
+```
+ 
+```{r}
+foldchanges = res$log2FoldChange
+names(foldchanges) = res$entrez
+head(foldchanges)
+# Get the results
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+attributes(keggres)
+head(keggres$less)
+keggrespathways <- rownames(keggres$greater)[1:5]
+
+# Extract the 8 character long IDs part of each string
+keggresids = substr(keggrespathways, start=1, stop=8)
+keggresids
+```
+ 
+```{r}
+pathview(gene.data=foldchanges, pathway.id="hsa04110")
+```
+ 
+```{r}
+pathview(gene.data=foldchanges, pathway.id="hsa04110", kegg.native=FALSE)
+```
+ 
+```{r}
+pathview(gene.data=foldchanges, pathway.id=keggresids, species="hsa")
+```
+ 
+ # Section 3 : Gene Ontology
+ 
+```{r}
+data(go.sets.hs)
+data(go.subs.hs)
+
+# Focus on Biological Process subset of GO
+gobpsets = go.sets.hs[go.subs.hs$BP]
+
+gobpres = gage(foldchanges, gsets=gobpsets, same.dir=TRUE)
+
+lapply(gobpres, head)
+```
+ 
+
+ 
+ 
+```{r}
+read.csv("GSE37704_featurecounts.csv")
+```
+
+ 
+ 
+ 
+ 
