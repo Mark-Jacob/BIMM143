@@ -1,9 +1,10 @@
----
+
 title: "Class06 R Functions"
 author: "Mark Allan Co Jacob"
 date: "10/17/2019"
-output: html_document
----
+output: 
+  html_document: 
+    keep_md: yes
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
