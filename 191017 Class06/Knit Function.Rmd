@@ -1,7 +1,6 @@
 ---
 title: "Class06 R Functions"
 author: "Mark Allan Co Jacob"
-date: "10/17/2019"
 output:
   html_document:
     keep_md: yes
